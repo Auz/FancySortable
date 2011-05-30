@@ -86,7 +86,7 @@ Events
 * onMoved: function(item, i, ind){}, - Fired when the list has been re-ordered. 'i' is the new index (from 0 to length+1) and 'ind' is the old position.
 * onHoverOver: function(dragging, target, i, ind){}, - When an item ('dragging': index 'ind') is dragged over another list item (index i).
 * onHoverOut: function(dragging, target, i, ind){}, - When an item ('dragging': index 'ind') leaves the area of a list item (index i).
-* onSort: function(){}, // Fired when the list is sorted by the user, and the list of items and their indexes are recalculated.
+* onSort: function(list, item, i, ind){}, // Fired when the list is sorted by the user, and the list of items and their indexes are recalculated.
 
 The following events are roughly analogous to events passed from Drag.Move, and allow one to use other 'droppable' elements besides re-ordering.
 
@@ -96,6 +96,9 @@ The following events are roughly analogous to events passed from Drag.Move, and 
 * onEnter: function(dragging, target){}, - The user dragged an item over a droppable.
 * onLeave: function(dragging, target){}, - The user left a droppable element.
 
+Supported listen events
+
+* refresh - Tells the class to update the list of items
 
 Caveats
 -------

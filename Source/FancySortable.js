@@ -259,6 +259,11 @@ var FancySortable = new Class({
 				//fire the event to inform the users:
 				this.fireEvent('moved', [item, i, ind]);
 				
+				// clean up indexes and what not for next sort:
+				this.reset();
+				
+				this.fireEvent('sort', [this.items, item, i, ind]);
+				
 			}.bind(this));
 
 			
@@ -267,8 +272,6 @@ var FancySortable = new Class({
 				// close this between, as the item will takes its place
 				this.betweens[i].setStyle('height', 0).removeClass(this.options.betweenOpenClass);
 				
-				// clean up indexes and what not for next sort:
-				this.reset.delay(80, this);
 			}.bind(this));
 			
 					
@@ -310,6 +313,5 @@ var FancySortable = new Class({
 		});
 		
 		this.addSortableOverlays();
-		this.fireEvent('sort');
 	}	
 });
