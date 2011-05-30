@@ -3,6 +3,8 @@
 
 script: FancySortable.js
 
+version: 0.1
+
 name: FancySortable
 
 description: Class for creating a fancy drag and drop sorting interface for lists of items.
@@ -10,7 +12,7 @@ description: Class for creating a fancy drag and drop sorting interface for list
 license: MIT-style license
 
 authors:
-- Graham McNicoll
+- Graham McNicoll (http://www.education.com/)
 
 requires:
 - core/1.3.0:Fx.Morph
@@ -163,7 +165,7 @@ var FancySortable = new Class({
 					// remove overlays:
 					this.sortOverlayWrap.setStyle('display', 'none');
 					
-					if(!target) {
+					if(target) {
 						if(target.hasClass(this.options.sortOverlayClass)) {
 							this.reSortDropped(dragging, target, item, ind, itemCoords);
 						} else {
