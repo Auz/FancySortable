@@ -57,7 +57,7 @@ Or to do something on the sort event:
 
 	new FancySortable('listwrap', '.listitem', {
 		'handleSelector':'.handle',
-		'onSort': function(item, i, ind) {
+		'onSort': function(list, item, i, ind) {
 			console.log('item moved from '+ind+' to '+i, item);
 		}
 	});
@@ -72,7 +72,7 @@ Options
 * betweenOpenClass - Class which is added to the between element when they are opened. default: 'open'
 * sortOverlayClass - Class to use on the invisible overlays. Default: 'sortoverlay'
 * betweenEl - Element tag name to use on the between elements. Defaults to the same as the list item.
-* expandHeight - Number of px high to make the gap between items when hovered over. 
+* expandHeight - Number of px high to make the gap between items when hovered over. Defaults to 50% of the first item.
 * hoverDuration - Number of milliseconds to make the effects last for on hovers. Default: 300 ms
 * moveDuration - Number of milliseconds for the move effect. Default: 700ms.
 * dragOpacity - Opacity, from 0 to 1, to make the the dragging element.
@@ -98,7 +98,7 @@ The following events are roughly analogous to events passed from Drag.Move, and 
 
 Supported listen events
 
-* refresh - Tells the class to update the list of items
+* refresh - Tells the class to update the list of items and their positions.
 
 Caveats
 -------

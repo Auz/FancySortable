@@ -55,7 +55,7 @@ var FancySortable = new Class({
 		sortOverlayClass: 'sortoverlay',
 		dragOpacity: 0.6, // the opacity of the dragged item
 		origOpacity: 0.5, // the opacity for the original item which hasnt moved yet.
-		expandHeight: 20 // height, in px, to make the hover over size between the items.
+		expandHeight: null // height, in px, to make the hover over size between the items.
 	},
 	
 	Implements: [Options, Events],
@@ -98,6 +98,9 @@ var FancySortable = new Class({
 	addBetweens: function() {
 		if(!this.options.betweenEl) {
 			this.options.betweenEl = this.items[0].get('tag');
+		}
+		if(!this.options.expandHeight) {
+			this.options.expandHeight = Math.round(this.items[0].getSize().y / 2);
 		}
 		var between = new Element(this.options.betweenEl, {'class': this.options.betweenClass });
 		// add one for before the list:
