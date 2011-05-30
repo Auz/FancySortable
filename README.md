@@ -83,10 +83,10 @@ Events
 
 * onBeforeStart: function(Event, item){}, - On mouse down on an item.
 * onStart: function(Drag, item, clone){}, - Fired when the user clicks on an item or handle, just after Drag.start().
-* onSort: function(i, ind){}, - Fired when the list has been re-ordered. 'i' is the new index (from 0 to length+1) and 'ind' is the old position.
+* onMoved: function(item, i, ind){}, - Fired when the list has been re-ordered. 'i' is the new index (from 0 to length+1) and 'ind' is the old position.
 * onHoverOver: function(dragging, target, i, ind){}, - When an item ('dragging': index 'ind') is dragged over another list item (index i).
 * onHoverOut: function(dragging, target, i, ind){}, - When an item ('dragging': index 'ind') leaves the area of a list item (index i).
-* onReset: function(){}, // Fired when the list is reset and indexes are recalculated.
+* onSort: function(){}, // Fired when the list is sorted by the user, and the list of items and their indexes are recalculated.
 
 The following events are roughly analogous to events passed from Drag.Move, and allow one to use other 'droppable' elements besides re-ordering.
 
