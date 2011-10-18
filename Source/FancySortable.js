@@ -168,7 +168,7 @@ var FancySortable = new Class({
 		this.fireEvent('beforeStart', [e, item]);
 		
 		if(!this.windowScroller) {
-			this.windowScroller = new Scroller(window);
+			this.windowScroller = new Scroller(document.body);
 		}
 		
 		e.stop();
