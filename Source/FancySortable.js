@@ -154,7 +154,7 @@ var FancySortable = new Class({
 					var handle = $(e.target);
 					if(handle.hasClass(handleSelect.substr(1)) || handle.getParent(handleSelect)) {
 						lastHandle = handle;
-						var item = (!this.options.handleSelector)?handle:handle.getParent(this.itemSelector);
+						var item = handle.getParent(this.itemSelector)||handle;
 						this.fireEvent('mousedown', [item, handle]);
 						this.doDrag(item, e);
 					}
