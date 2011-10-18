@@ -87,12 +87,18 @@ var FancySortable = new Class({
 		
 		//add event listeners:
 		this.addEvent('refresh', this.reset.bind(this));
+		
+		this.postInit();
 	},
 	
 	initItems: function(){
 		this.items.each(function(el, ind){
 			this.itemSize[ind] = el.setStyle('overflow','hidden').store('index', ind).getSize();
 		}, this);
+	},
+	
+	postInit: function() {
+		this.fireEvent('init');
 	},
 	
 	addBetweens: function() {
@@ -102,7 +108,7 @@ var FancySortable = new Class({
 		if(!this.options.expandHeight) {
 			this.options.expandHeight = Math.round(this.items[0].getSize().y / 2);
 		}
-		var between = new Element(this.options.betweenEl, {'class': this.options.betweenClass });
+		var between = new Element(this.options.betweenEl, {'class': this.options.betweenClass, 'styles':{'height':0} });
 		// add one for before the list:
 		between.clone().inject(this.items[0], 'before');
 		// then add one after each:
@@ -119,7 +125,8 @@ var FancySortable = new Class({
 		
 		if(!this.sortOverlayWrap) {
 			this.parentEl.setStyle('position', 'relative');
-			this.sortOverlayWrap = new Element('div', {'styles':{'position':'absolute', 'top':0, 'left':0, 'display':'none'} }).inject(this.parentEl);
+			var offset = this.items[0].getPosition(this.parentEl);
+			this.sortOverlayWrap = new Element('div', {'styles':{'position':'absolute', 'top':offset.y, 'left':offset.x, 'display':'none'} }).inject(this.parentEl);
 		}
 		// insert top: 
 		this.sortHeights[0] = this.itemSize[0].y/2;
@@ -138,77 +145,102 @@ var FancySortable = new Class({
 	
 	addSortableItems: function() {
 		//deligate:
-		var deligationSelect = this.itemSelector+(this.options.handleSelector?' '+this.options.handleSelector:'');
-
-		this.parentEl.addEvent('mousedown:relay('+deligationSelect+')', function(e, handle){
-			if(e && e.rightClick) { return; }
-			
-			var item = (!this.options.handleSelector)?handle:handle.getParent(this.itemSelector);
-			this.fireEvent('beforeStart', [e, item]);
-			
-			e.stop();
-			
-			//make the overlays avaliable:
-			this.sortOverlayWrap.setStyle('display', '');
-			var itemCoords = item.getCoordinates();
-			
-			// grab the current items index:
-			var ind = item.retrieve('index');
-			
-			item.setStyle('opacity', this.options.origOpacity).set('morph', {'link':'cancel', 'duration': this.options.moveDuration });
-			
-			var clone = item.clone()
-				.setStyles(itemCoords)
-				.setStyles({'opacity': this.options.dragOpacity, 'position':'absolute', 'z-index':9000})
-				.set('morph', {'link': 'cancel', 'duration': this.options.moveDuration})
-				.addClass('dragging')
-				.inject(document.body);
-			
-			var drag = new Drag.Move(clone, {
-				droppables: '.'+this.options.droppableClass,
-				onDrop: function(dragging, target) {
-					// remove overlays:
-					this.sortOverlayWrap.setStyle('display', 'none');
-					
-					if(target) {
-						if(target.hasClass(this.options.sortOverlayClass)) {
-							this.reSortDropped(dragging, target, item, ind, itemCoords);
-						} else {
-							// dropped, but not on one of ours... 
-							// fire event here and let the client deal with it.
-							this.fireEvent('drop', [dragging, target]);
-						}
-					} else {
-						// missed: no target
-						this.cancelDrag(item, dragging, itemCoords);
-						this.fireEvent('missed', [dragging, item]);
-					}
-				}.bind(this),
-				onEnter: function(dragging, target) {
-					this.fireEvent('enter', [dragging, target]);
-					target.addClass(this.options.hoverClass);
-					if(target.hasClass(this.options.sortOverlayClass)) {
-						this.hoverOver(dragging, target, ind);
-					}
-				}.bind(this),
-				onLeave: function(dragging, target) { 
-					this.fireEvent('leave', [dragging, target]);
-					target.removeClass(this.options.hoverClass);
-					if(target.hasClass(this.options.sortOverlayClass)) {
-						this.hoverOut(dragging, target, ind);
-					}
-				}.bind(this),
-				onCancel: function(dragging) { 
-					this.fireEvent('cancel', [dragging, item]);
-					this.sortOverlayWrap.setStyle('display', 'none');
-					clone.destroy();
-					item.setStyle('opacity', 1);
-				}.bind(this)
-			});
-			drag.start(e);
-			this.fireEvent('start', [drag, item, clone]);
-		}.bind(this));
+		var handleSelect = (this.options.handleSelector ? this.options.handleSelector:this.itemSelector);
 		
+		var lastHandle = null;
+		
+		this.parentEl.addEvents({'mousedown': function(e){
+				if(e && e.rightClick) { return; }
+					var handle = $(e.target);
+					if(handle.hasClass(handleSelect.substr(1)) || handle.getParent(handleSelect)) {
+						lastHandle = handle;
+						var item = (!this.options.handleSelector)?handle:handle.getParent(this.itemSelector);
+						this.fireEvent('mousedown', [item, handle]);
+						this.doDrag(item, e);
+					}
+				}.bind(this)
+		});
+		
+	},
+	
+	doDrag: function(item, e) {
+		
+		this.fireEvent('beforeStart', [e, item]);
+		
+		if(!this.windowScroller) {
+			this.windowScroller = new Scroller(window);
+		}
+		
+		e.stop();
+		this.windowScroller.start();
+		
+		//make the overlays avaliable:
+		this.sortOverlayWrap.setStyle('display', '');
+		var itemCoords = item.getCoordinates();
+		
+		// grab the current items index:
+		var ind = item.retrieve('index');
+		
+		item.setStyle('opacity', this.options.origOpacity).set('morph', {'link':'cancel', 'duration': this.options.moveDuration });
+		
+		var clone = item.clone()
+			.setStyles(itemCoords)
+			.setStyles({'opacity': this.options.dragOpacity, 'position':'absolute', 'z-index':9000})
+			.set('morph', {'link': 'cancel', 'duration': this.options.moveDuration})
+			.addClass('dragging')
+			.inject(document.body);
+		
+		var drag = new Drag.Move(clone, {
+			droppables: '.'+this.options.droppableClass,
+			onDrop: function(dragging, target) {
+				this.dropped(dragging, target);
+				
+				// remove overlays:
+				this.sortOverlayWrap.setStyle('display', 'none');
+				
+				if(target) {
+					if(target.hasClass(this.options.sortOverlayClass)) {
+						this.reSortDropped(dragging, target, item, ind, itemCoords);
+					} else {
+						// dropped, but not on one of ours... 
+						this.droppedUnknown(dragging, target, item, ind);
+					}
+				} else {
+					// missed: no target
+					this.cancelDrag(item, dragging, itemCoords);
+					this.fireEvent('missed', [dragging, item]);
+				}
+			}.bind(this),
+			onEnter: function(dragging, target) {
+				this.fireEvent('enter', [dragging, target]);
+				target.addClass(this.options.hoverClass);
+				if(target.hasClass(this.options.sortOverlayClass)) {
+					this.hoverOver(dragging, target, ind);
+				}
+			}.bind(this),
+			onLeave: function(dragging, target) { 
+				this.fireEvent('leave', [dragging, target]);
+				target.removeClass(this.options.hoverClass);
+				if(target.hasClass(this.options.sortOverlayClass)) {
+					this.hoverOut(dragging, target, ind);
+				}
+			}.bind(this),
+			onCancel: function(dragging) { 
+				this.dropped(dragging);
+				this.fireEvent('cancel', [dragging, item]);
+				this.sortOverlayWrap.setStyle('display', 'none');
+				clone.destroy();
+				item.setStyle('opacity', 1);
+			}.bind(this)
+		});
+		drag.start(e);
+		this.fireEvent('start', [drag, item, clone]);
+		
+	},
+	
+	dropped: function(dragging, target) {
+		this.windowScroller.stop();
+		this.fireEvent('dropped', [dragging, target]);
 	},
 	
 	hoverOver: function(dragging, target, ind ) {
@@ -231,19 +263,21 @@ var FancySortable = new Class({
 		
 		// get the new position index:				
 		var i = target.retrieve('index');
-		// i is the new location, ind is the old
+		// i is the new index (of the mask, wich is N+1), ind is the old
 		
 		if(ind != i-1 && i != ind) {
 			// its a different position:
 			item.setStyles({'opacity': 1});
 			
-			var newcoords = this.betweens[i].getCoordinates();
-		
-			var newheight = dragging.getSize().y;
+			var destinationBetween = this.betweens[i],
+				newcoords = destinationBetween.getCoordinates(),		
+				newheight = dragging.getSize().y,
+				newind = i;
 
 			if(i > ind) {
 				// moving down (becauce we are removeing it out of the list, we need to subtract it off to get the right position when the effects run.
 				newcoords.top = newcoords.top - newheight;
+				newind = i-1;
 			}
 			// slide out the item (in its original position)
 			item.get('morph').start({'height':0, 'opacity': 0}).chain(function(){
@@ -259,21 +293,21 @@ var FancySortable = new Class({
 				// move the between:
 				this.betweens[ind].dispose().inject(item, betweenpos);
 				
-				//fire the event to inform the users:
-				this.fireEvent('moved', [item, i, ind]);
+				// fire the event to inform the users:
+				this.fireEvent('moved', [item, newind, i, ind]);
 				
 				// clean up indexes and what not for next sort:
 				this.reset();
 				
-				this.fireEvent('sort', [this.items, item, i, ind]);
+				this.postSort(item, newind, ind, i);
 				
 			}.bind(this));
 
 			
 			// make the gap the right hight for the new item we are inserting, then move it in
-			this.betweens[i].get('morph').start({'height': newheight}).chain(function(){
+			destinationBetween.get('morph').start({'height': newheight}).chain(function(){
 				// close this between, as the item will takes its place
-				this.betweens[i].setStyle('height', 0).removeClass(this.options.betweenOpenClass);
+				destinationBetween.setStyle('height', 0).removeClass(this.options.betweenOpenClass);
 				
 			}.bind(this));
 			
@@ -287,6 +321,15 @@ var FancySortable = new Class({
 			this.cancelDrag(item, dragging, itemCoords);
 		}
 	
+	},
+	
+	postSort: function(item, replacesInd, ind, i) {
+		this.fireEvent('sort', [this.items, item, replacesInd, ind, i]);
+	},
+	
+	droppedUnknown: function(dragging, target) {
+		// fire event here and let the client deal with it.
+		this.fireEvent('drop', [dragging, target]);
 	},
 	
 	cancelDrag: function(item, dragging, itemCoords) {
@@ -303,17 +346,20 @@ var FancySortable = new Class({
 	},
 	
 	reset: function() {
-		this.sortOverlayWrap.destroy();
-		this.sortOverlayWrap = null;
+		if(this.sortOverlayWrap) {
+			this.sortOverlayWrap.empty();
+		}
+		
 		this.sortHeights = [];
 		this.sortOverlays = [];
 		
-		this.betweens = this.parentEl.getElements('.'+this.options.betweenClass);
 		this.items = this.parentEl.getElements(this.itemSelector);
+		
 		// update the item's index:
-		this.items.each(function(item, ind){
-			item.store('index', ind);
-		});
+		this.initItems();
+		
+		this.parentEl.getElements('.'+this.options.betweenClass).destroy();
+		this.addBetweens();
 		
 		this.addSortableOverlays();
 	}	
