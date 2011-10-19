@@ -1,0 +1,9 @@
+name: FancySortable
+author: Auz
+category: Interface
+description: FancySortable is a class for creating a fancy drag and drop sorting interface for lists of items."
+tags: [drag, drop, sortable, list]
+docs: https://github.com/Auz/FancySortable/blob/master/README.md
+demo: http://jsfiddle.net/auzz/yXTfv/
+current: 1.0
+
