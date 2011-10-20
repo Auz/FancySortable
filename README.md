@@ -3,6 +3,7 @@ FancySortable
 
 FancySortable is a mootools class which creates a sortable list with fancy effects.
 
+![Screenshot](http://d0wn.net/FancySortable.jpg)
 
 Demo
 ----
