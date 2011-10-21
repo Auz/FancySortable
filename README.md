@@ -17,6 +17,7 @@ Features
 * Fancy hover effects which show and hide 'gaps' between the list to indicate the future position should the user release the mouse.
 * Adds an element which expands between list items, so this 'gap' can be styled.
 * Ghosted dragged item and/or original item.
+* Scrolls the window if you drag near the edge of the view port (like most OSs).
 * Event delegation for performance.
 * Ability to use this class with other 'droppable' items using onDrop event, and other Drag.Move events (see below).
 
