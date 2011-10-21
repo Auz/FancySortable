@@ -15,10 +15,10 @@ authors:
 - Graham McNicoll (http://www.education.com/)
 
 requires:
-- core/1.3.0:Fx.Morph
-- core/1.3.0:Fx.Tween
-- more/1.3.0:Drag.Move
-- more/1.3.0:Element.Delegation
+- core/Fx.Morph
+- core/Fx.Tween
+- more/Drag.Move
+- more/Scroller
 
 provides: [FancySortable]
 
@@ -48,11 +48,14 @@ var FancySortable = new Class({
 		hoverDuration: 300, // duration for the hover effects
 		moveDuration: 700, // duration for the move effects
 		betweenEl: null, // element type to make the 'between' elements. If null it will chose the same as the list item.
-		droppableClass: 'droppable', 
+		droppableClass: 'droppable',
+		draggingClass: 'dragging',
 		hoverClass: 'drag-over',
 		betweenClass: 'between-item',
 		betweenOpenClass: 'open',
 		sortOverlayClass: 'sortoverlay',
+		scrollWindow: true, // whether or not to scroll the window
+		scrollerOptions: {}, // options to pass to the Scroller instance (if the above is true)
 		dragOpacity: 0.6, // the opacity of the dragged item
 		origOpacity: 0.5, // the opacity for the original item which hasnt moved yet.
 		expandHeight: null // height, in px, to make the hover over size between the items.
@@ -167,12 +170,13 @@ var FancySortable = new Class({
 		
 		this.fireEvent('beforeStart', [e, item]);
 		
-		if(!this.windowScroller) {
-			this.windowScroller = new Scroller(document.body);
-		}
-		
 		e.stop();
-		this.windowScroller.start();
+		if(this.options.scrollWindow) {
+			if(!this.windowScroller) {
+				this.windowScroller = new Scroller(document.body, this.options.scrollerOptions);
+			}
+			this.windowScroller.start();
+		}
 		
 		//make the overlays avaliable:
 		this.sortOverlayWrap.setStyle('display', '');
@@ -187,7 +191,7 @@ var FancySortable = new Class({
 			.setStyles(itemCoords)
 			.setStyles({'opacity': this.options.dragOpacity, 'position':'absolute', 'z-index':9000})
 			.set('morph', {'link': 'cancel', 'duration': this.options.moveDuration})
-			.addClass('dragging')
+			.addClass(this.options.draggingClass)
 			.inject(document.body);
 		
 		var drag = new Drag.Move(clone, {
@@ -239,7 +243,9 @@ var FancySortable = new Class({
 	},
 	
 	dropped: function(dragging, target) {
-		this.windowScroller.stop();
+		if(this.options.scrollWindow) {
+			this.windowScroller.stop();
+		}
 		this.fireEvent('dropped', [dragging, target]);
 	},
 	
