@@ -69,6 +69,7 @@ Options
 
 * handleSelector - A selector, relative to the parent, for the handle. Defaults to nothing, and uses the whole item as a draggable element
 * droppableclass - A class which marks elements as able to receive droppable items. See Drag.Move. Default: 'droppable'
+* draggingClass - A class to add to the item when being dragged. Default: 'dragging'
 * hoverClass - A class to add to a list item when it is being hover over. Default: 'drag-over'
 * betweenClass - Class to add to elements inserted to make gaps to indicate the drop position. default: 'between-item'
 * betweenOpenClass - Class which is added to the between element when they are opened. default: 'open'
@@ -77,8 +78,10 @@ Options
 * expandHeight - Number of px high to make the gap between items when hovered over. Defaults to 50% of the first item.
 * hoverDuration - Number of milliseconds to make the effects last for on hovers. Default: 300 ms
 * moveDuration - Number of milliseconds for the move effect. Default: 700ms.
-* dragOpacity - Opacity, from 0 to 1, to make the the dragging element.
-* origOpacity - Opacity, from 0 to 1, to make the original item in the list.
+* dragOpacity - Opacity, from 0 to 1, to make the the dragging element. Default: 0.6
+* origOpacity - Opacity, from 0 to 1, to make the original item in the list. Default: 0.5
+* scrollWindow - Boolean: Whether or not to scroll the window when dragging gets close to the edge of the view port. Default: true
+* scrollerOptions - An Object to pass to the Scroller instance, see Scroller documentation. Only used if scrollWindow is true. Default: {}
 
 Events
 ------
