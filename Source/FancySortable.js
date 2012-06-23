@@ -3,7 +3,7 @@
 
 script: FancySortable.js
 
-version: 0.1
+version: 0.2
 
 name: FancySortable
 
@@ -57,7 +57,7 @@ var FancySortable = new Class({
 		scrollWindow: true, // whether or not to scroll the window
 		scrollerOptions: {}, // options to pass to the Scroller instance (if the above is true)
 		dragOpacity: 0.6, // the opacity of the dragged item
-		origOpacity: 0.5, // the opacity for the original item which hasnt moved yet.
+		origOpacity: 0.5, // the opacity for the original item which hasn't moved yet.
 		expandHeight: null // height, in px, to make the hover over size between the items.
 	},
 	
@@ -129,16 +129,21 @@ var FancySortable = new Class({
 		if(!this.sortOverlayWrap) {
 			this.parentEl.setStyle('position', 'relative');
 			var offset = this.items[0].getPosition(this.parentEl);
+			offset.y  = offset.y - this.items[0].getStyle('margin-top').toInt();
 			this.sortOverlayWrap = new Element('div', {'styles':{'position':'absolute', 'top':offset.y, 'left':offset.x, 'display':'none'} }).inject(this.parentEl);
 		}
 		// insert top: 
-		this.sortHeights[0] = this.itemSize[0].y/2;
+		this.sortHeights[0] = parseInt((this.items[0].getCoordinates(this.parentEl).bottom + this.items[0].getStyle('margin-top').toInt()) / 2); 
 		this.sortOverlays[0] = new Element('div', {'class':this.options.sortOverlayClass+' '+this.options.droppableClass, 'styles': {'height': this.sortHeights[0], 'width':this.itemSize[0].x} }).set('tween', {'link': 'cancel','duration': this.options.hoverDuration}).store('index', 0);
 		this.sortOverlayWrap.adopt(this.sortOverlays[0]);
 		// insert each:
 		this.items.each(function(el, ind){
 			var sortindex = ind+1;
-			this.sortHeights[sortindex] = (this.itemSize[ind].y + ((this.items[ind+1])?this.itemSize[ind+1].y:0)) / 2;
+			if(this.items[ind+1]) {
+				this.sortHeights[sortindex] = (this.items[ind+1].getCoordinates(this.parentEl).bottom.toInt() - this.items[ind].getCoordinates(this.parentEl).bottom.toInt());
+			} else {
+				this.sortHeights[sortindex] = parseInt((this.items[ind].getCoordinates(this.parentEl).height.toInt() + this.items[ind].getStyle('margin-bottom').toInt()) / 2);
+			}
 			this.sortOverlays[sortindex] = new Element('div', {'class':this.options.sortOverlayClass+' '+this.options.droppableClass, 'styles': {'height': this.sortHeights[sortindex], 'width':this.itemSize[ind].x} })
 				.set('tween', {'link': 'cancel', 'duration': this.options.hoverDuration})
 				.store('index', sortindex);
@@ -154,7 +159,7 @@ var FancySortable = new Class({
 		
 		this.parentEl.addEvents({'mousedown': function(e){
 				if(e && e.rightClick) { return; }
-					var handle = $(e.target);
+					var handle = document.id(e.target);
 					if(handle.hasClass(handleSelect.substr(1)) || handle.getParent(handleSelect)) {
 						lastHandle = handle;
 						var item = handle.getParent(this.itemSelector)||handle;
@@ -178,9 +183,11 @@ var FancySortable = new Class({
 			this.windowScroller.start();
 		}
 		
-		//make the overlays avaliable:
+		//make the overlays available:
 		this.sortOverlayWrap.setStyle('display', '');
 		var itemCoords = item.getCoordinates();
+		delete itemCoords.height;
+		itemCoords.width = item.getStyle('width').toInt();
 		
 		// grab the current items index:
 		var ind = item.retrieve('index');
@@ -276,23 +283,33 @@ var FancySortable = new Class({
 			item.setStyles({'opacity': 1});
 			
 			var destinationBetween = this.betweens[i],
-				newcoords = destinationBetween.getCoordinates(),		
-				newheight = dragging.getSize().y,
-				newind = i;
-
+                newcoords = destinationBetween.getCoordinates(),
+                newheight = (dragging.getSize().y),
+                newind = i,
+                dissolveMargin = 0;
+            if(i !== 0) {
+                newcoords.top = newcoords.top - item.getStyle('margin-bottom').toInt();
+            } else {
+                newheight = newheight + item.getStyle('margin-top').toInt();
+            }
+            if(ind !== 0) {
+                dissolveMargin = item.getStyle('margin-top').toInt();
+            }
+            
 			if(i > ind) {
 				// moving down (becauce we are removeing it out of the list, we need to subtract it off to get the right position when the effects run.
-				newcoords.top = newcoords.top - newheight;
-				newind = i-1;
-			}
-			// slide out the item (in its original position)
-			item.get('morph').start({'height':0, 'opacity': 0}).chain(function(){
+                newcoords.top = newcoords.top - newheight - item.getStyle('margin-top').toInt();
+                newind = i-1;
+            }
+            
+            // slide out the item (in its original position)
+			item.get('morph').start({'height':0, 'opacity': 0, 'padding-top':0, 'padding-bottom':0, 'margin-top':(-1 * dissolveMargin), 'margin-bottom':0, 'border':0}).chain(function(){
 				// when done, make visible again and then move
 				var betweenpos = 'after';
 				if(this.items[i]) {
-					item.dispose().setStyles({'margin':0, 'opacity': 1, 'visibility':'visible', 'height': ''}).inject(this.items[i], 'before');
+					item.dispose().setStyles({'opacity': 1, 'visibility':'visible', 'height': '', 'margin-top':'', 'margin-bottom':'', 'border':'', 'padding-top':'', 'padding-bottom':''}).inject(this.items[i], 'before');
 				} else {
-					item.dispose().setStyles({'margin':0, 'opacity': 1, 'visibility':'visible', 'height': ''}).inject(this.items[i-1], 'after');
+					item.dispose().setStyles({'opacity': 1, 'visibility':'visible', 'height': '', 'margin-top':'', 'margin-bottom':'', 'border':'', 'padding-top':'', 'padding-bottom':''}).inject(this.items[i-1], 'after');
 					betweenpos = 'before';
 				}
 				
