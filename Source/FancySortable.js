@@ -196,7 +196,7 @@ var FancySortable = new Class({
 		
 		var clone = item.clone()
 			.setStyles(itemCoords)
-			.setStyles({'opacity': this.options.dragOpacity, 'position':'absolute', 'z-index':9000})
+			.setStyles({'opacity': this.options.dragOpacity, 'position':'absolute', 'z-index':9000, 'height': item.getStyle('height')})
 			.set('morph', {'link': 'cancel', 'duration': this.options.moveDuration})
 			.addClass(this.options.draggingClass)
 			.inject(document.body);
